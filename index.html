@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>PoT Interactive Server Map</title>
+    
+    <!-- Load Leaflet Map Layout Framework Engines -->
+    <link rel="stylesheet" href="https://unpkg.com" crossorigin="" />
+    <script src="https://unpkg.com" crossorigin=""></script>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #111;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        /* 📁 Left Sidebar Column Styling */
+        .sidebar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 240px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            border-right: 2px solid #2d2d2d;
+            box-sizing: border-box;
+            padding: 20px 15px;
+            overflow-y: auto;
+            z-index: 2000;
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .menu-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #cccccc;
+            cursor: pointer;
+            user-select: none;
+            padding: 4px 0;
+            transition: color 0.2s ease;
+        }
+
+        .menu-label:hover {
+            color: #ffffff;
+        }
+
+        .menu-label input[type="checkbox"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            accent-color: #3388ff;
+        }
+
+        /* 🗺️ Right Map Canvas Column */
+        #map-canvas {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 240px;
+            right: 0;
+            background-color: #111;
+            z-index: 1000;
+        }
+
+        /* Dark Theme UI Overrides for Leaflet Control Elements */
+        .leaflet-bar {
+            border: 2px solid #2d2d2d !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5) !important;
+        }
+        .leaflet-bar a {
+            background-color: #1a1a1a !important;
+            color: #ffffff !important;
+            border-bottom: 1px solid #2d2d2d !important;
+        }
+        .leaflet-bar a:hover {
+            background-color: #2a2a2a !important;
+            color: #ffffff !important;
+        }
+        
+        /* Styled Tooltip Popups matching game theme */
+        .leaflet-popup-content-wrapper {
+            background: #1a1a1a !important;
+            color: #ffffff !important;
+            border: 1px solid #444 !important;
+            border-radius: 6px !important;
+        }
+        .leaflet-popup-tip {
+            background: #1a1a1a !important;
+            border: 1px solid #444 !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Left Sidebar Column Layout -->
+    <div class="sidebar">
+        <div class="sidebar-title">🗺️ Map Controls</div>
+        <div class="menu-group">
+            <label class="menu-label"><input type="checkbox" id="chk-water" checked> 💧 Fresh Water</label>
+            <label class="menu-label"><input type="checkbox" id="chk-food" checked> 🍖 Food & Salt</label>
+            <label class="menu-label"><input type="checkbox" id="chk-quest" checked> 📜 Custom Quests</label>
+            <label class="menu-label"><input type="checkbox" id="chk-berry" checked> 🍒 Berry Bushes</label>
+            <label class="menu-label"><input type="checkbox" id="chk-carrion" checked> 🥩 Carrion</label>
+            <label class="menu-label"><input type="checkbox" id="chk-mushroom" checked> 🍄 Mushrooms</label>
+        </div>
+    </div>
+
+    <!-- Right Interactive Map Canvas Grid -->
+    <div id="map-canvas"></div>
+
+    <script>
+        window.addEventListener('load', function() {
+            
+            // 1. Initialize zoomable map plane engine using flat coordinate limits (0 to 1024)
+            var map = L.map('map-canvas', {
+                crs: L.CRS.Simple,
+                minZoom: -1,
+                maxZoom: 3,
+                zoomSnap: 0.5,
+                attributionControl: false
+            });
+
+            // 2. Map Image boundaries setting layout matching your custom high-res file
+            var bounds = [[0, 0], [1024, 1024]];
+            var mapImageURL = 'https://imgur.com/a/3jQCRhy'; 
+            
+            L.imageOverlay(mapImageURL, bounds).addTo(map);
+            map.fitBounds(bounds);
+
+            // 3. Instantiate Individual Toggle Layer Storage Bins
+            var waterLayer = L.layerGroup().addTo(map);
+            var foodLayer = L.layerGroup().addTo(map);
+            var questLayer = L.layerGroup().addTo(map);
+            var berryLayer = L.layerGroup().addTo(map);
+            var carrionLayer = L.layerGroup().addTo(map);
+            var mushroomLayer = L.layerGroup().addTo(map);
+
+            // -------------------------------------------------------------
+            // 📍 PLOT YOUR SERVER RESOURCES DIRECTLY HERE (Grid Values: 0 to 1024)
+            // -------------------------------------------------------------
+            
+            // 💧 Fresh Water Nodes (Blue)
+            L.circleMarker([512, 512], { radius: 7, color: '#3388ff', fillColor: '#3388ff', fillOpacity: 0.8 }).bindPopup("<b>Center Water Node</b><br>Titans Pass / Birchwoods").addTo(waterLayer);
+            L.circleMarker([350, 750], { radius: 7, color: '#3388ff', fillColor: '#3388ff', fillOpacity: 0.8 }).bindPopup("<b>Green Valley Lake</b>").addTo(waterLayer);
+
+            // 🍖 Food & Salt Nodes (Green)
+            L.circleMarker([600, 480], { radius: 7, color: '#2ecc71', fillColor: '#2ecc71', fillOpacity: 0.8 }).bindPopup("<b>Sharptooth Marsh Resource</b>").addTo(foodLayer);
+            L.circleMarker([560, 640], { radius: 7, color: '#2ecc71', fillColor: '#2ecc71', fillOpacity: 0.8 }).bindPopup("<b>Salt Flats Node</b>").addTo(foodLayer);
+            
+            // 📜 Custom Quest Nodes (Purple)
+            L.circleMarker([750, 420], { radius: 7, color: '#9b59b6', fillColor: '#9b59b6', fillOpacity: 0.8 }).bindPopup("<b>Savanna Event Spawner</b>").addTo(questLayer);
+
+            // 🍒 Berry Bushes (Red)
+            L.circleMarker([550, 380], { radius: 6, color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.8 }).bindPopup("<b>Grand Plains Berry Bush</b>").addTo(berryLayer);
+
+            // 🥩 Carrion Spawners (Orange)
+            L.circleMarker([680, 560], { radius: 6, color: '#e67e22', fillColor: '#e67e22', fillOpacity: 0.8 }).bindPopup("<b>Burned Forest Meat Spawner</b>").addTo(carrionLayer);
+
+            // 🍄 Mushroom Clusters (Yellow)
+            L.circleMarker([480, 530], { radius: 6, color: '#f1c40f', fillColor: '#f1c40f', fillOpacity: 0.8 }).bindPopup("<b>Birchwoods Mushroom Patch</b>").addTo(mushroomLayer);
+
+            // -------------------------------------------------------------
+
+            // 4. Hook the left sidebar checkbox inputs directly into Leaflet visibility states
+            setupToggle('chk-water', waterLayer);
+            setupToggle('chk-food', foodLayer);
+            setupToggle('chk-quest', questLayer);
+            setupToggle('chk-berry', berryLayer);
+            setupToggle('chk-carrion', carrionLayer);
+            setupToggle('chk-mushroom', mushroomLayer);
+
+            function setupToggle(elementId, layerGroup) {
+                document.getElementById(elementId).addEventListener('change', function(e) {
+                    if (e.target.checked) {
+                        map.addLayer(layerGroup);
+                    } else {
+                        map.removeLayer(layerGroup);
+                    }
+                });
+            }
+
+            // Force rendering refresh pass to lock layout dimensions
+            setTimeout(function() {
+                map.invalidateSize();
+            }, 200);
+        });
+    </script>
+</body>
+</html>
