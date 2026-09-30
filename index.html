@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>PoT Interactive Server Map</title>
     
-    <!-- Load Leaflet Map Layout Framework Engines -->
+    <!-- Load Leaflet Map Engines Directly -->
     <link rel="stylesheet" href="https://unpkg.com" crossorigin="" />
     <script src="https://unpkg.com" crossorigin=""></script>
 
@@ -135,81 +135,69 @@
     <div id="map-canvas"></div>
 
     <script>
-        window.addEventListener('load', function() {
-            
-            // 1. Initialize zoomable map plane engine using flat coordinate limits (0 to 1024)
-            var map = L.map('map-canvas', {
-                crs: L.CRS.Simple,
-                minZoom: -1,
-                maxZoom: 3,
-                zoomSnap: 0.5,
-                attributionControl: false
-            });
+        // Define clean 1024x1024 dimensions grid
+        var bounds = [[0, 0], [1024, 1024]];
+        var mapImageURL = 'https://i.imgur.com/8dig9Ox.jpeg';
 
-            // 2. Map Image boundaries setting layout matching your custom high-res file
-            var bounds = [[0, 0], [1024, 1024]];
-            var mapImageURL = 'https://imgur.com/a/3jQCRhy'; 
-            
-            L.imageOverlay(mapImageURL, bounds).addTo(map);
-            map.fitBounds(bounds);
-
-            // 3. Instantiate Individual Toggle Layer Storage Bins
-            var waterLayer = L.layerGroup().addTo(map);
-            var foodLayer = L.layerGroup().addTo(map);
-            var questLayer = L.layerGroup().addTo(map);
-            var berryLayer = L.layerGroup().addTo(map);
-            var carrionLayer = L.layerGroup().addTo(map);
-            var mushroomLayer = L.layerGroup().addTo(map);
-
-            // -------------------------------------------------------------
-            // 📍 PLOT YOUR SERVER RESOURCES DIRECTLY HERE (Grid Values: 0 to 1024)
-            // -------------------------------------------------------------
-            
-            // 💧 Fresh Water Nodes (Blue)
-            L.circleMarker([512, 512], { radius: 7, color: '#3388ff', fillColor: '#3388ff', fillOpacity: 0.8 }).bindPopup("<b>Center Water Node</b><br>Titans Pass / Birchwoods").addTo(waterLayer);
-            L.circleMarker([350, 750], { radius: 7, color: '#3388ff', fillColor: '#3388ff', fillOpacity: 0.8 }).bindPopup("<b>Green Valley Lake</b>").addTo(waterLayer);
-
-            // 🍖 Food & Salt Nodes (Green)
-            L.circleMarker([600, 480], { radius: 7, color: '#2ecc71', fillColor: '#2ecc71', fillOpacity: 0.8 }).bindPopup("<b>Sharptooth Marsh Resource</b>").addTo(foodLayer);
-            L.circleMarker([560, 640], { radius: 7, color: '#2ecc71', fillColor: '#2ecc71', fillOpacity: 0.8 }).bindPopup("<b>Salt Flats Node</b>").addTo(foodLayer);
-            
-            // 📜 Custom Quest Nodes (Purple)
-            L.circleMarker([750, 420], { radius: 7, color: '#9b59b6', fillColor: '#9b59b6', fillOpacity: 0.8 }).bindPopup("<b>Savanna Event Spawner</b>").addTo(questLayer);
-
-            // 🍒 Berry Bushes (Red)
-            L.circleMarker([550, 380], { radius: 6, color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.8 }).bindPopup("<b>Grand Plains Berry Bush</b>").addTo(berryLayer);
-
-            // 🥩 Carrion Spawners (Orange)
-            L.circleMarker([680, 560], { radius: 6, color: '#e67e22', fillColor: '#e67e22', fillOpacity: 0.8 }).bindPopup("<b>Burned Forest Meat Spawner</b>").addTo(carrionLayer);
-
-            // 🍄 Mushroom Clusters (Yellow)
-            L.circleMarker([480, 530], { radius: 6, color: '#f1c40f', fillColor: '#f1c40f', fillOpacity: 0.8 }).bindPopup("<b>Birchwoods Mushroom Patch</b>").addTo(mushroomLayer);
-
-            // -------------------------------------------------------------
-
-            // 4. Hook the left sidebar checkbox inputs directly into Leaflet visibility states
-            setupToggle('chk-water', waterLayer);
-            setupToggle('chk-food', foodLayer);
-            setupToggle('chk-quest', questLayer);
-            setupToggle('chk-berry', berryLayer);
-            setupToggle('chk-carrion', carrionLayer);
-            setupToggle('chk-mushroom', mushroomLayer);
-
-            function setupToggle(elementId, layerGroup) {
-                document.getElementById(elementId).addEventListener('change', function(e) {
-                    if (e.target.checked) {
-                        map.addLayer(layerGroup);
-                    } else {
-                        map.removeLayer(layerGroup);
-                    }
-                });
-            }
-
-            // Force rendering refresh pass to lock layout dimensions
-            setTimeout(function() {
-                map.invalidateSize();
-            }, 200);
+        // 1. Initialize map view centered firmly at [512, 512]
+        var map = L.map('map-canvas', {
+            crs: L.CRS.Simple,
+            minZoom: -1,
+            maxZoom: 3,
+            zoomSnap: 0.5,
+            center: [512, 512],
+            zoom: 0,
+            maxBounds: bounds,
+            attributionControl: false
         });
+
+        // 2. Lock the Gondwa image layer over the coordinate plane grid
+        L.imageOverlay(mapImageURL, bounds).addTo(map);
+        map.fitBounds(bounds);
+
+        // 3. Instantiate Individual Toggle Layer Storage Bins
+        var waterLayer = L.layerGroup().addTo(map);
+        var foodLayer = L.layerGroup().addTo(map);
+        var questLayer = L.layerGroup().addTo(map);
+        var berryLayer = L.layerGroup().addTo(map);
+        var carrionLayer = L.layerGroup().addTo(map);
+        var mushroomLayer = L.layerGroup().addTo(map);
+
+        // -------------------------------------------------------------
+        // 📍 PLOT YOUR SERVER RESOURCES DIRECTLY HERE (Grid Values: 0 to 1024)
+        // -------------------------------------------------------------
+        L.circleMarker([512, 512], { radius: 7, color: '#3388ff', fillColor: '#3388ff', fillOpacity: 0.8 }).bindPopup("<b>Center Water Node</b><br>Titans Pass / Birchwoods").addTo(waterLayer);
+        L.circleMarker([350, 750], { radius: 7, color: '#3388ff', fillColor: '#3388ff', fillOpacity: 0.8 }).bindPopup("<b>Green Valley Lake</b>").addTo(waterLayer);
+        L.circleMarker([600, 480], { radius: 7, color: '#2ecc71', fillColor: '#2ecc71', fillOpacity: 0.8 }).bindPopup("<b>Sharptooth Marsh Resource</b>").addTo(foodLayer);
+        L.circleMarker([580, 620], { radius: 7, color: '#2ecc71', fillColor: '#2ecc71', fillOpacity: 0.8 }).bindPopup("<b>Salt Flats Node</b>").addTo(foodLayer);
+        L.circleMarker([750, 450], { radius: 7, color: '#9b59b6', fillColor: '#9b59b6', fillOpacity: 0.8 }).bindPopup("<b>Savanna Event Spawner</b>").addTo(questLayer);
+        L.circleMarker([680, 380], { radius: 6, color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.8 }).bindPopup("<b>Grand Plains Berry Bush</b>").addTo(berryLayer);
+        L.circleMarker([700, 580], { radius: 6, color: '#e67e22', fillColor: '#e67e22', fillOpacity: 0.8 }).bindPopup("<b>Burned Forest Meat Spawner</b>").addTo(carrionLayer);
+        L.circleMarker([520, 560], { radius: 6, color: '#f1c40f', fillColor: '#f1c40f', fillOpacity: 0.8 }).bindPopup("<b>Birchwoods Mushroom Patch</b>").addTo(mushroomLayer);
+        // -------------------------------------------------------------
+
+        // 4. Hook inputs directly into visibility states
+        setupToggle('chk-water', waterLayer);
+        setupToggle('chk-food', foodLayer);
+        setupToggle('chk-quest', questLayer);
+        setupToggle('chk-berry', berryLayer);
+        setupToggle('chk-carrion', carrionLayer);
+        setupToggle('chk-mushroom', mushroomLayer);
+
+        function setupToggle(elementId, layerGroup) {
+            document.getElementById(elementId).addEventListener('change', function(e) {
+                if (e.target.checked) {
+                    map.addLayer(layerGroup);
+                } else {
+                    map.removeLayer(layerGroup);
+                }
+            });
+        }
+
+        // Force final bounds recalculation check pass
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 250);
     </script>
 </body>
 </html>
